@@ -26,6 +26,4 @@ function _M.subtract(self, params )
 	return nil, "param input valid"
 end
 
-
-
 return _M
