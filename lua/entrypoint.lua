@@ -9,9 +9,6 @@ if err then
 end
 
 local function cleanup()
-    -- custom cleanup work goes here, like cancelling a pending DB transaction
-
-    -- now abort all the "light threads" running in the current request handler
     ngx.log(ngx.WARN, "do cleanup")
     ngx.exit(-1)
 end
@@ -22,6 +19,19 @@ if not ok then
     ngx.exit(-1)
 end
 
+local function response(tcpsock, data)
+    local req_data = cjson.decode(data)
+	if not req_data.jsonrpc and not req_data.id then
+		return
+	end
+
+	local rep_data = {jsonrpc=req_data.jsonrpc, id=req_data.id}
+	rep_data.result, rep_data.err = jsonrpc:call(req_data.method, req_data.params)
+
+	tcpsock:send(cjson.encode(rep_data).."\n")
+	return 
+end
+
 while true do
 	local data, err = tcpsock:receive("*l")
 	if err and "timeout" ~= err then
@@ -30,15 +40,7 @@ while true do
 	end
 
 	if data then
-		local req_data = cjson.decode(data)
-		if not req_data.jsonrpc and not req_data.id then
-			break
-		end
-
-		local rep_data = {jsonrpc=req_data.jsonrpc, id=req_data.id}
-		rep_data.result, rep_data.err = jsonrpc:call(req_data.method, req_data.params)
-
-		tcpsock:send(cjson.encode(rep_data).."\r\n")
+		ngx.thread.spawn(response, tcpsock, data)
 	end
 end
 

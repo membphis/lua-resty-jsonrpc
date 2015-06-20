@@ -24,6 +24,14 @@ rpc call with positional parameters:
 <-- {"jsonrpc": "2.0", "result": -19, "id": 2}
 ```
 
+rpc call with parallels:
+```
+--> {"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 1}
+--> {"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}
+<-- {"jsonrpc": "2.0", "result": -19, "id": 1}
+<-- {"jsonrpc": "2.0", "result": -19, "id": 2}
+```
+
 Add your interface
 ================
 please take a look with lua/jsonrpc_interface.lua, you can add new interface as the "subtract" in same way
